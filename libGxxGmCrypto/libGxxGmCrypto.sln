@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libGxxGmCrypto", "libGxxGmCrypto\libGxxGmCrypto.vcproj", "{B68DB0B1-4527-44B1-B9DB-A3D57A17A413}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GxxGmGenerateTool", "GxxGmGenerateTool\GxxGmGenerateTool.vcproj", "{06E52050-01DB-4301-B321-40437BD9F5AA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B68DB0B1-4527-44B1-B9DB-A3D57A17A413}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B68DB0B1-4527-44B1-B9DB-A3D57A17A413}.Debug|Win32.Build.0 = Debug|Win32
+		{B68DB0B1-4527-44B1-B9DB-A3D57A17A413}.Release|Win32.ActiveCfg = Release|Win32
+		{B68DB0B1-4527-44B1-B9DB-A3D57A17A413}.Release|Win32.Build.0 = Release|Win32
+		{06E52050-01DB-4301-B321-40437BD9F5AA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{06E52050-01DB-4301-B321-40437BD9F5AA}.Debug|Win32.Build.0 = Debug|Win32
+		{06E52050-01DB-4301-B321-40437BD9F5AA}.Release|Win32.ActiveCfg = Release|Win32
+		{06E52050-01DB-4301-B321-40437BD9F5AA}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
