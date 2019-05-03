@@ -1,6 +1,8 @@
 #include "GxxGmCrypto.h"
 #include <string>
 
+#define BLOCK_SIZE	8
+
 // https://blog.csdn.net/yygydjkthh/article/details/18666357#
 
 GxxGmCrypto::GxxGmCrypto()
@@ -8,8 +10,7 @@ GxxGmCrypto::GxxGmCrypto()
 	// 加载OpenSSL的全部算法
 	OpenSSL_add_all_algorithms();
 
-	memset(key_, 0, EVP_MAX_KEY_LENGHT);
-	memset(iv_, 0, EVP_MAX_KEY_LENGHT);
+	
 }
 
 GxxGmCrypto::~GxxGmCrypto()
@@ -29,12 +30,19 @@ int GxxGmCrypto::AesEncryptData(const unsigned char *plain, int plain_len, unsig
 {
 	int errCode = 0;
 
+	unsigned char key_[EVP_MAX_KEY_LENGHT] = {0};
+	unsigned char iv_[EVP_MAX_KEY_LENGHT] = {0};
+	const EVP_CIPHER *evp_cipher_ = NULL;
+
+	memset(key_, 0, EVP_MAX_KEY_LENGHT);
+	memset(iv_, 0, EVP_MAX_KEY_LENGHT);
+
 	// 数据分组，采用PKCS#7（PKCS7Padding）填充，块大小为16字节
 	// 那么这里需要计算明文长度，整合出最终需要加密的数据对其长度，并且进行PKCS#7填充
-	int block_count = plain_len / 16 + 1;
-	int plain_block_tail_len = plain_len % 16;
-	int padding_size = 16 - plain_block_tail_len;
-	int padding_plain_buffer_len = 16 * block_count;
+	int block_count = plain_len / BLOCK_SIZE + 1;
+	int plain_block_tail_len = plain_len % BLOCK_SIZE;
+	int padding_size = BLOCK_SIZE - plain_block_tail_len;
+	int padding_plain_buffer_len = BLOCK_SIZE * block_count;
 
 	// 判断密文缓冲区长度是否足够，不够则返回
 	if (*cipher_len < padding_plain_buffer_len)
@@ -133,6 +141,13 @@ int GxxGmCrypto::AesDecryptData(const unsigned char *cipher, int cipher_len, uns
 {
 	int errCode = 0;
 
+	unsigned char key_[EVP_MAX_KEY_LENGHT] = {0};
+	unsigned char iv_[EVP_MAX_KEY_LENGHT] = {0};
+	const EVP_CIPHER *evp_cipher_ = NULL;
+
+	memset(key_, 0, EVP_MAX_KEY_LENGHT);
+	memset(iv_, 0, EVP_MAX_KEY_LENGHT);
+
 	// 初始化加密上下文
 	EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
 	EVP_CIPHER_CTX_init(ctx);
@@ -169,7 +184,45 @@ int GxxGmCrypto::AesDecryptData(const unsigned char *cipher, int cipher_len, uns
 	else
 		evp_cipher_ = EVP_aes_128_ecb();
 
-	// 
+	// 初始化解密环境
+	errCode = EVP_DecryptInit_ex(ctx, EVP_aes_128_cbc(), NULL, key_, iv_);
+	if (errCode != 1)
+	{
+		return -1;
+	}
+
+	// 预留对齐后的明文缓冲区大小
+	int align_plain_buffer_len = cipher_len;
+	unsigned char *align_plain_buffer = new unsigned char[align_plain_buffer_len];
+
+	int decrypted_len = 0;
+	errCode = EVP_DecryptUpdate(ctx, align_plain_buffer, &decrypted_len, cipher, cipher_len);
+	if (errCode != 1)
+	{
+		return -2;
+	}
+
+	// 解密最后一部分数据
+	int decrypted_final = 0;
+	errCode = EVP_DecryptFinal_ex(ctx, align_plain_buffer + decrypted_len, &decrypted_final);
+	if (errCode != 1)
+	{
+		return -3;
+	}
+
+	int new_plain_len = decrypted_len + decrypted_final;
+
+	// 检查最后一个字节，然后拷贝到
+	int padding_len = align_plain_buffer[new_plain_len - 1];
+	int data_len = new_plain_len - padding_len;
+
+	if (*plain_len < data_len)
+	{
+		return -4;
+	}
+
+	memcpy(plain, align_plain_buffer, data_len);
+	*plain_len = data_len;
 
 	EVP_CIPHER_CTX_cleanup(ctx);
 	return errCode;
