@@ -2,8 +2,7 @@
 #define _GxxGmCrypto_H_
 
 #include <string>
-#include "openssl/evp.h"
-#include "openssl/ossl_typ.h"
+
 
 #define EVP_MAX_KEY_LENGHT 64
 
@@ -15,18 +14,18 @@ public:
 
 public:
 	/**
-	 * 初始化AES算法环境，
-	 * 参数：
-	 *	@key			密钥，不超过16字节，超过的部分截断，不足的部分补零
-	 *	@key_len		密钥长度
-	 *	@encrypt_mode	加密模式，ECB、CBC、CFB、OFB
-	 *	@iv				向量，不超过16字节，超过的部分截断，不足的部分补零
-	 *	@iv_len			向量长度
-	 * 返回值：
-	 *	@
+	 * 加密数据，需要输入明文、明文长度、密钥、向量
+	 * 加密模式默认为AES/CBC/PKCS5Padding，128位加密
+	 * 加密结果为密文的Base64值
 	 */
-	//int AesInitialize(const char *key, int key_len, const char *encrypt_mode, const char *iv, int iv_len);
+	int GxxGmEncryptData(const unsigned char *plain, int plain_len, unsigned char *cipher, int *cipher_len, const char *key, int key_len, const char *encrypt_mode, const char *iv, int iv_len);
 
+	/**
+	 * 解密数据
+	 */
+	int GxxGmDecryptData(const unsigned char *cipher, int cipher_len, unsigned char *plain, int *plain_len);
+
+public:
 	/**
 	 * 加密数据
 	 * 参数：

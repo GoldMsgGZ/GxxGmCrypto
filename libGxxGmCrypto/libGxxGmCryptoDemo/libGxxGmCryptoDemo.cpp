@@ -6,33 +6,37 @@
 #include <string>
 #include <Windows.h>
 
-#include "../libGxxGmCrypto/GxxGmCrypto.h"
+#include "../libGxxGmCryptoEx/libGxxGmCryptoEx.h"
 
-#pragma comment(lib, "libGxxGmCrypto.lib")
-#pragma comment(lib, "libcrypto.lib")
-#pragma comment(lib, "libssl.lib")
+#pragma comment(lib, "libGxxGmCryptoEx.lib")
+//#pragma comment(lib, "libcrypto.lib")
+//#pragma comment(lib, "libssl.lib")
 
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	// 待加密的数据
 	const char *plain = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+-=";
-	const char *key = (const char *)"1234567890123456";
-	const char *iv = (const char *)"abcdefghijklmnop";
 
-	int cipher_buffer_len = 4096;
-	unsigned char cipher[4096] = {0};
+	// 加密密钥，这里应该随机生成
+	const unsigned char *key = (const unsigned char *)"1234567890123456";
+	int key_len = strlen((const char *)key);
 
-	GxxGmCrypto crypto;
-	int errCode = crypto.AesEncryptData((const unsigned char *)plain, strlen(plain), cipher, &cipher_buffer_len, key, 16, "CBC_128", iv, 16);
+	// 向量，固定，也可以随机生成
+	const unsigned char *iv = (const unsigned char *)"abcdefghijklmnop";
+	int iv_len = strlen((const char *)iv);
 
-	int new_plain_buffer_len = 4096;
-	unsigned char new_plain[4096] = {0};
-	errCode = crypto.AesDecryptData(cipher, cipher_buffer_len, new_plain, &new_plain_buffer_len, key, 16, "CBC_128", iv, 16);
+	libGxxGmCryptoEx crypto;
 
-	if (memcmp(new_plain, plain, strlen(plain)) == 0)
-		std::cout<<"加解密成功！"<<std::endl;
-	else
-		std::cout<<"加解密失败！"<<std::endl;
+	// 加密明文
+	std::string cipher;
+	crypto.Encrypt_v1(plain, cipher, key, key_len, "aes-128-cbc", iv, iv_len);
+
+	// 读取pfx文件，用私钥加密密钥
+	const char *pfx_file = "LEVAM.pfx";
+
+	std::string new_plain;
+	crypto.Decrypt_v1(cipher, new_plain, key, key_len, "aes-128-cbc", iv, iv_len);
 
 	//system("pause"):
 	return 0;

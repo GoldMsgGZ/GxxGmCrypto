@@ -5,11 +5,15 @@
 #include "stdafx.h"
 #include "GxxGmGenerateTool.h"
 #include "GxxGmGenerateToolDlg.h"
+#include "../libGxxGmCryptoEx/libGxxGmCryptoEx.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
+
+
+#pragma comment(lib, "libGxxGmCryptoEx.lib")
 
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
@@ -107,6 +111,9 @@ BOOL CGxxGmGenerateToolDlg::OnInitDialog()
 	m_cPlain.LimitText(16);
 	m_cKey.LimitText(16);
 
+	m_cPlain.SetWindowText(_T("1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+-="));
+	m_cKey.SetWindowText(_T("1234567890123456"));
+
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -162,34 +169,59 @@ HCURSOR CGxxGmGenerateToolDlg::OnQueryDragIcon()
 
 void CGxxGmGenerateToolDlg::OnBnClickedBtnGenerate()
 {
-	// 获取明文密码
-	CString plain;
-	m_cPlain.GetWindowText(plain);
-	if (plain.Empty())
-	{
-		MessageBox(_T("明文密码不能为空！"), _T("警告"), MB_OK|MB_ICONWARNING);
-		return;
-	}
+	//// 获取明文密码
+	//CString plain;
+	//m_cPlain.GetWindowText(plain);
+	//if (plain.IsEmpty())
+	//{
+	//	MessageBox(_T("明文密码不能为空！"), _T("警告"), MB_OK|MB_ICONWARNING);
+	//	return;
+	//}
 
-	// 获取密钥
-	CString key;
-	m_cKey.GetWindowText(key);
-	if (key.Empty())
-	{
-		MessageBox(_T("密钥不能为空！"), _T("警告"), MB_OK|MB_ICONWARNING);
-		return;
-	}
+	//// 获取密钥
+	//CString key;
+	//m_cKey.GetWindowText(key);
+	//if (key.IsEmpty())
+	//{
+	//	MessageBox(_T("密钥不能为空！"), _T("警告"), MB_OK|MB_ICONWARNING);
+	//	return;
+	//}
 
-	// 检查证书
-	CString cert_path;
-	m_cCertPath.GetWindowText(cert_path);
-	if (cert_path.Empty() && m_cUseCert.GetCheck())
-	{
-		MessageBox(_T("加密证书未指定！"), _T("警告"), MB_OK|MB_ICONWARNING);
-		return;
-	}
+	//// 检查证书
+	//CString cert_path;
+	//m_cCertPath.GetWindowText(cert_path);
+	//if (cert_path.IsEmpty() && m_cUseCert.GetCheck())
+	//{
+	//	MessageBox(_T("加密证书未指定！"), _T("警告"), MB_OK|MB_ICONWARNING);
+	//	return;
+	//}
 
-	// 准备参数进行加密
-	USES_CONVERSION;
+	//// 准备参数进行加密
+	//USES_CONVERSION;
+	//std::string plain_string = T2A(plain.GetBuffer(0));
+	//std::string key_string = T2A(key.GetBuffer(0));
+	//
+	//unsigned char iv[16] = {0};
+	//memcpy(iv, "abcdefghijklmnop", 16);
 
+	//std::string cipher_string;
+	//libGxxGmCryptoEx crypto;
+	//crypto.Encrypt_v1(plain_string, cipher_string, (const unsigned char *)key_string.c_str(), key_string.size(), "aes128", iv, 16);
+
+	//m_cCipher.SetWindowText(A2T(cipher_string.c_str()));
+
+	const char *plain = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+-=";
+
+	const unsigned char *key = (const unsigned char *)"1234567890123456";
+	int key_len = strlen((const char *)key);
+
+	const unsigned char *iv = (const unsigned char *)"abcdefghijklmnop";
+	int iv_len = strlen((const char *)iv);
+
+	libGxxGmCryptoEx crypto;
+	std::string cipher;
+	crypto.Encrypt_v1(plain, cipher, key, key_len, "aes128", iv, iv_len);
+
+	std::string new_plain;
+	crypto.Decrypt_v1(cipher, new_plain, key, key_len, "aes128", iv, iv_len);
 }

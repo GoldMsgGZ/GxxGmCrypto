@@ -1,6 +1,10 @@
 #include "GxxGmCrypto.h"
 #include <string>
 
+#include "openssl/evp.h"
+#include "openssl/ossl_typ.h"
+
+
 #define BLOCK_SIZE	8
 
 // https://blog.csdn.net/yygydjkthh/article/details/18666357#
@@ -8,7 +12,7 @@
 GxxGmCrypto::GxxGmCrypto()
 {
 	// 加载OpenSSL的全部算法
-	OpenSSL_add_all_algorithms();
+	//OpenSSL_add_all_algorithms();
 
 	
 }
@@ -18,13 +22,16 @@ GxxGmCrypto::~GxxGmCrypto()
 	
 }
 
-//int GxxGmCrypto::AesInitialize(const char *key, int key_len, const char *encrypt_mode, const char *iv, int iv_len)
-//{
-//	int errCode = 0;
-//
-//	
-//	return errCode;
-//}
+int GxxGmCrypto::GxxGmEncryptData(const unsigned char *plain, int plain_len, unsigned char *cipher, int *cipher_len, const char *key, int key_len, const char *encrypt_mode, const char *iv, int iv_len)
+{
+	/**
+	 * 这里的加密这样处理：
+	 * 加密后的数据组织数据结构：
+	 * Base64Encode(| 时间戳1 | 加密后的密文 | 时间戳1加密的密钥 | 时间戳2 | 时间戳2加密的向量 | 时间戳3 |)
+	 */
+
+	return 0;
+}
 
 int GxxGmCrypto::AesEncryptData(const unsigned char *plain, int plain_len, unsigned char *cipher, int *cipher_len, const char *key, int key_len, const char *encrypt_mode, const char *iv, int iv_len)
 {
