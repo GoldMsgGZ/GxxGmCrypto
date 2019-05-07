@@ -43,7 +43,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::string errstr;
 	try
 	{
-		const char *pfx_file = "Gosuncn-levam.pfx";
+		const char *pfx_file = "E:\\opensource\\GxxGmCrypto\\libGxxGmCrypto\\libGxxGmCryptoDemo\\Gosuncn-levam.pfx";
 		Poco::Crypto::PKCS12Container pkcs12(pfx_file, "123456");
 		Poco::Crypto::EVPPKey evpkey = pkcs12.getKey();
 
@@ -53,11 +53,6 @@ int _tmain(int argc, _TCHAR* argv[])
 		std::string protected_key = pCipher->encryptString((const char*)key, Poco::Crypto::Cipher::ENC_BASE64);
 	}
 	catch(Poco::Crypto::CryptoException &e)
-	{
-		errCode = e.code();
-		errstr = e.displayText();
-	}
-	catch(Poco::Crypto::OpenSSLException &e)
 	{
 		errCode = e.code();
 		errstr = e.displayText();
