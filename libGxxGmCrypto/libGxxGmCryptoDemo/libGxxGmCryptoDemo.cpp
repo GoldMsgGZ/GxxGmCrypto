@@ -3,24 +3,22 @@
 
 #include "stdafx.h"
 #include <iostream>
+#include <sstream>
+#include <fstream>
 #include <string>
 #include <Windows.h>
 
 #include "../libGxxGmCryptoEx/libGxxGmCryptoEx.h"
 
-#include "Poco/Crypto/PKCS12Container.h"
-#include "Poco/Crypto/RSAKey.h"
-#include "Poco/Crypto/Cipher.h"
-#include "Poco/Crypto/CipherFactory.h"
-#include "Poco/Crypto/CipherKey.h"
 
 #pragma comment(lib, "libGxxGmCryptoEx.lib")
-//#pragma comment(lib, "libcrypto.lib")
-//#pragma comment(lib, "libssl.lib")
 
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+	int errCode = 0;
+	std::string errstr;
+
 	// 待加密的数据
 	const char *plain = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ+-=";
 
@@ -34,37 +32,58 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	libGxxGmCryptoEx crypto;
 
+
+	//////////////////////////////////////////////////////////////////////////
+	//
+	// 对称加解密
+	//
+	//////////////////////////////////////////////////////////////////////////
+
 	// 加密明文
 	std::string cipher;
 	crypto.Encrypt_v1(plain, cipher, key, key_len, "aes-128-cbc", iv, iv_len);
 
-	// 读取pfx文件，用私钥加密密钥
-	int errCode = 0;
-	std::string errstr;
-	try
-	{
-		const char *pfx_file = "E:\\opensource\\GxxGmCrypto\\libGxxGmCrypto\\libGxxGmCryptoDemo\\Gosuncn-levam.pfx";
-		Poco::Crypto::PKCS12Container pkcs12(pfx_file, "123456");
-		Poco::Crypto::EVPPKey evpkey = pkcs12.getKey();
-
-		Poco::Crypto::RSAKey *rsakey = new Poco::Crypto::RSAKey(evpkey);
-		Poco::Crypto::Cipher::Ptr pCipher = Poco::Crypto::CipherFactory::defaultFactory().createCipher(*rsakey, RSA_PADDING_PKCS1);
-
-		std::string protected_key = pCipher->encryptString((const char*)key, Poco::Crypto::Cipher::ENC_BASE64);
-	}
-	catch(Poco::Crypto::CryptoException &e)
-	{
-		errCode = e.code();
-		errstr = e.displayText();
-	}
-	catch(Poco::Exception &e)
-	{
-		errCode = e.code();
-		errstr = e.displayText();
-	}
-
+	// 解密明文
 	std::string new_plain;
 	crypto.Decrypt_v1(cipher, new_plain, key, key_len, "aes-128-cbc", iv, iv_len);
+
+	if (new_plain.compare(plain) == 0)
+		std::cout<<"对称加解密成功！"<<std::endl;
+	else
+		std::cout<<"对称加解密失败！"<<std::endl;
+
+	//////////////////////////////////////////////////////////////////////////
+	//
+	// 非对称加密
+	//
+	//////////////////////////////////////////////////////////////////////////
+
+	const char *pkcs12cert_path = "Gosuncn-levam.pfx";
+	const char *pkcs12cert_pin = "123456";
+
+	const char *x509cert_path = "Gosuncn-levam.cer";
+	
+	// 使用PKCS12证书加密
+	std::string pkcs12_cipher;
+	errCode = crypto.RsaEncryptWithPKCS12Cert_v1(plain, pkcs12_cipher, pkcs12cert_path, pkcs12cert_pin);
+
+	//// 使用X509证书加密
+	//std::string x509_cipher;
+	//errCode = crypto.RsaEncryptWithX509Cert_v1(plain, x509_cipher, x509cert_path);
+
+	//if (pkcs12_cipher.compare(x509_cipher) == 0)
+	//	std::cout<<"RSA加密成功！"<<std::endl;
+	//else
+	//	std::cout<<"RSA加密失败！"<<std::endl;
+
+	// 使用PKCS12证书解密
+	std::string rsa_plain;
+	errCode = crypto.RsaDecryptWithPKCS12Cert_v1(pkcs12_cipher, rsa_plain, pkcs12cert_path, pkcs12cert_pin);
+
+	if (rsa_plain.compare(plain) == 0)
+		std::cout<<"RSA加解密成功！"<<std::endl;
+	else
+		std::cout<<"RSA加解密失败！"<<std::endl;
 
 	//system("pause"):
 	return 0;
