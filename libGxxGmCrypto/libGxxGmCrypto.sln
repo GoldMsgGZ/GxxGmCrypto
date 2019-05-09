@@ -3,11 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libGxxGmCrypto", "libGxxGmCrypto\libGxxGmCrypto.vcproj", "{B68DB0B1-4527-44B1-B9DB-A3D57A17A413}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GxxGmGenerateTool", "GxxGmGenerateTool\GxxGmGenerateTool.vcproj", "{06E52050-01DB-4301-B321-40437BD9F5AA}"
-	ProjectSection(ProjectDependencies) = postProject
-		{0AC9947E-F1E5-4F16-9C70-FA4F81326B16} = {0AC9947E-F1E5-4F16-9C70-FA4F81326B16}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libGxxGmCryptoDemo", "libGxxGmCryptoDemo\libGxxGmCryptoDemo.vcproj", "{42A109E7-62DD-498D-8004-84ED0857FB11}"
 	ProjectSection(ProjectDependencies) = postProject
 		{0AC9947E-F1E5-4F16-9C70-FA4F81326B16} = {0AC9947E-F1E5-4F16-9C70-FA4F81326B16}
@@ -26,10 +21,6 @@ Global
 		{B68DB0B1-4527-44B1-B9DB-A3D57A17A413}.Debug|Win32.Build.0 = Debug|Win32
 		{B68DB0B1-4527-44B1-B9DB-A3D57A17A413}.Release|Win32.ActiveCfg = Release|Win32
 		{B68DB0B1-4527-44B1-B9DB-A3D57A17A413}.Release|Win32.Build.0 = Release|Win32
-		{06E52050-01DB-4301-B321-40437BD9F5AA}.Debug|Win32.ActiveCfg = Debug|Win32
-		{06E52050-01DB-4301-B321-40437BD9F5AA}.Debug|Win32.Build.0 = Debug|Win32
-		{06E52050-01DB-4301-B321-40437BD9F5AA}.Release|Win32.ActiveCfg = Release|Win32
-		{06E52050-01DB-4301-B321-40437BD9F5AA}.Release|Win32.Build.0 = Release|Win32
 		{42A109E7-62DD-498D-8004-84ED0857FB11}.Debug|Win32.ActiveCfg = Debug|Win32
 		{42A109E7-62DD-498D-8004-84ED0857FB11}.Debug|Win32.Build.0 = Debug|Win32
 		{42A109E7-62DD-498D-8004-84ED0857FB11}.Release|Win32.ActiveCfg = Release|Win32

@@ -13,8 +13,7 @@
 
 #pragma comment(lib, "libGxxGmCryptoEx.lib")
 
-
-int _tmain(int argc, _TCHAR* argv[])
+void TestInterface()
 {
 	int errCode = 0;
 	std::string errstr;
@@ -58,11 +57,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	//
 	//////////////////////////////////////////////////////////////////////////
 
-	const char *pkcs12cert_path = "Gosuncn-levam.pfx";
+	const char *pkcs12cert_path = "TestCert.pfx";
 	const char *pkcs12cert_pin = "123456";
 
-	const char *x509cert_path = "Gosuncn-levam.cer";
-	
+	const char *x509cert_path = "TestCert.cer";
+
 	// 使用PKCS12证书加密
 	std::string pkcs12_cipher;
 	errCode = crypto.RsaEncryptWithPKCS12Cert_v1(plain, pkcs12_cipher, pkcs12cert_path, pkcs12cert_pin);
@@ -84,6 +83,35 @@ int _tmain(int argc, _TCHAR* argv[])
 		std::cout<<"RSA加解密成功！"<<std::endl;
 	else
 		std::cout<<"RSA加解密失败！"<<std::endl;
+}
+
+void TestPinProtect()
+{
+	// 首先，生成受保护的Pin
+	const char *pin = "12345";
+	const char *pkcs12cert_path = "TestCert.pfx";
+	const char *pkcs12cert_pin = "123456";
+
+	std::string pin_cipher;
+	libGxxGmCryptoEx crypto;
+	crypto.EncryptPin_v1(pin, pin_cipher, pkcs12cert_path, pkcs12cert_pin);
+
+	std::string pin_plain;
+	crypto.DecryptPin_v1(pin_cipher, pin_plain, pkcs12cert_path, pkcs12cert_pin);
+
+	if (pin_plain.compare(pin) == 0)
+		std::cout<<"pin码保护成功！"<<std::endl;
+	else
+		std::cout<<"pin码保护失败！"<<std::endl;
+}
+
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+	int errCode = 0;
+	std::string errstr;
+
+	TestPinProtect();
 
 	//system("pause"):
 	return 0;

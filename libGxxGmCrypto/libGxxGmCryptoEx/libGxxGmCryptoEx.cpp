@@ -5,9 +5,12 @@
 #include "Poco/Crypto/PKCS12Container.h"
 #include "Poco/Crypto/X509Certificate.h"
 #include "Poco/Crypto/RSAKey.h"
+#include "Poco/JSON/Object.h"
+#include "Poco/JSON/Parser.h"
+#include "Poco/Base64Encoder.h"
+#include "Poco/Base64Decoder.h"
 #include "Poco/Random.h"
-#include "Poco/Json/Object.h"
-#include "Poco/Json/Array.h"
+
 
 #include <iostream>
 #include <sstream>
@@ -30,28 +33,49 @@ int libGxxGmCryptoEx::EncryptPin_v1(std::string pin, std::string &pin_cipher, st
 
 	// 1.生成16字节随机数，4个整形随机数即可，作为AES-128-CBC的密钥
 	Poco::Random random_generate;
-	Poco::UInt32 random_factor_1 = random_generate.next();
-	Poco::UInt32 random_factor_2 = random_generate.next();
-	Poco::UInt32 random_factor_3 = random_generate.next();
-	Poco::UInt32 random_factor_4 = random_generate.next();
-
 	unsigned char key[16] = {0};
-	memcpy(key,			&random_factor_1, sizeof(Poco::UInt32));
-	memcpy(key + 4,		&random_factor_2, sizeof(Poco::UInt32));
-	memcpy(key + 8,		&random_factor_3, sizeof(Poco::UInt32));
-	memcpy(key + 12,	&random_factor_4, sizeof(Poco::UInt32));
+
+	try {
+		Poco::UInt32 random_factor_1 = random_generate.next();
+		Poco::UInt32 random_factor_2 = random_generate.next();
+		Poco::UInt32 random_factor_3 = random_generate.next();
+		Poco::UInt32 random_factor_4 = random_generate.next();
+
+		memcpy(key,			&random_factor_1, sizeof(Poco::UInt32));
+		memcpy(key + 4,		&random_factor_2, sizeof(Poco::UInt32));
+		memcpy(key + 8,		&random_factor_3, sizeof(Poco::UInt32));
+		memcpy(key + 12,	&random_factor_4, sizeof(Poco::UInt32));
+	} 
+	catch (Poco::Exception &e)
+	{
+		errCode = -1;
+		errstr = e.displayText();
+		return errCode;
+	}
+	
+
+	
+	
 
 	// 2.生成16字节随机数，4个整形随机数即可，作为AES-128-CBC的向量
-	Poco::UInt32 random_factor_5 = random_generate.next();
-	Poco::UInt32 random_factor_6 = random_generate.next();
-	Poco::UInt32 random_factor_7 = random_generate.next();
-	Poco::UInt32 random_factor_8 = random_generate.next();
-
 	unsigned char iv[16] = {0};
-	memcpy(iv,			&random_factor_5, sizeof(Poco::UInt32));
-	memcpy(iv + 4,		&random_factor_6, sizeof(Poco::UInt32));
-	memcpy(iv + 8,		&random_factor_7, sizeof(Poco::UInt32));
-	memcpy(iv + 12,		&random_factor_8, sizeof(Poco::UInt32));
+	try {
+		Poco::UInt32 random_factor_5 = random_generate.next();
+		Poco::UInt32 random_factor_6 = random_generate.next();
+		Poco::UInt32 random_factor_7 = random_generate.next();
+		Poco::UInt32 random_factor_8 = random_generate.next();
+		
+		memcpy(iv,			&random_factor_5, sizeof(Poco::UInt32));
+		memcpy(iv + 4,		&random_factor_6, sizeof(Poco::UInt32));
+		memcpy(iv + 8,		&random_factor_7, sizeof(Poco::UInt32));
+		memcpy(iv + 12,		&random_factor_8, sizeof(Poco::UInt32));
+	}
+	catch (Poco::Exception &e)
+	{
+		errCode = -2;
+		errstr = e.displayText();
+		return errCode;
+	}
 
 	// 3. 加密口令
 	std::string original_pin_cipher;
@@ -59,7 +83,7 @@ int libGxxGmCryptoEx::EncryptPin_v1(std::string pin, std::string &pin_cipher, st
 	if (errCode != 0)
 	{
 		// 加密失败
-		return -1;
+		return -3;
 	}
 
 	// 4.加密密钥
@@ -71,10 +95,21 @@ int libGxxGmCryptoEx::EncryptPin_v1(std::string pin, std::string &pin_cipher, st
 	if (errCode != 0)
 	{
 		// 加密失败
-		return -1;
+		return -4;
 	}
 
-	// 5. 加密向量
+	// 5. 加密加密模式
+	std::string mode_plain = "aes-128-cbc";
+	std::string mode_cipher;
+
+	errCode = this->RsaEncryptWithPKCS12Cert_v1(mode_plain, mode_cipher, pkcs12cert_path, pkcs12cert_pin);
+	if (errCode != 0)
+	{
+		// 加密失败
+		return -5;
+	}
+
+	// 6. 加密向量
 	std::string iv_plain;
 	iv_plain.append((const char *)iv, 16);
 	std::string iv_cipher;
@@ -82,29 +117,126 @@ int libGxxGmCryptoEx::EncryptPin_v1(std::string pin, std::string &pin_cipher, st
 	if (errCode != 0)
 	{
 		// 加密失败
-		return -1;
+		return -6;
 	}
 
-	// 6. 结果序列化分别序列化：加密向量>>>加密口令>>>加密模式>>>加密密钥
+	// 7. 结果序列化分别序列化：加密向量>>>加密口令>>>加密模式>>>加密密钥
 	// 纠结了一下，就简单粗暴的处理吧，用Json装载这些数据
+	std::string json_str;
+	try {
+		Poco::JSON::Object json_obj;
+		json_obj.set("parameter1", iv_cipher);
+		json_obj.set("parameter2", key_cipher);
+		json_obj.set("parameter3", mode_cipher);
+		json_obj.set("parameter4", original_pin_cipher);
+
+		std::stringstream json_stream;
+		json_obj.stringify(json_stream, 0);
+		json_str = json_stream.str();
+	}
+	catch (Poco::JSON::JSONException &e)
+	{
+		errCode = -7;
+		errstr = e.displayText();
+		return errCode;
+	}
 
 	// 7. 序列化结果Base64Encode
+	try {
+		std::ostringstream base64_stringstream;
+		Poco::Base64Encoder base64encoder(base64_stringstream);
+		base64encoder<<json_str;
+		base64encoder.close();
+		pin_cipher = base64_stringstream.str();
+	}
+	catch (Poco::Exception &e)
+	{
+		errCode = -8;
+		errstr = e.displayText();
+		return errCode;
+	}
 
-	return errCode;
+	return 0;
 }
 
-int libGxxGmCryptoEx::DecryptPin_v1(std::string pin_cipher, std::string &pin)
+int libGxxGmCryptoEx::DecryptPin_v1(std::string pin_cipher, std::string &pin, std::string pkcs12cert_path, std::string pkcs12cert_pin)
 {
 	int errCode = 0;
 	std::string errstr;
 
 	// 1. Base64Decode解出序列化结果
+	std::string json_str;
+	try {
+		std::istringstream base64_stringstream(pin_cipher);
+		Poco::Base64Decoder base64decoder(base64_stringstream);
+		if (!base64decoder.good())
+			return -1;
+
+		base64decoder>>json_str;
+	}
+	catch (Poco::Exception &e)
+	{
+		errCode = -2;
+		errstr = e.displayText();
+		return errCode;
+	}
+	
 
 	// 2. 提取出加密模式、加密口令、加密密钥、加密向量
+	std::string iv_cipher;
+	std::string key_cipher;
+	std::string mode_cipher;
+	std::string original_pin_cipher;
 
-	// 3. 
+	try {
+		Poco::JSON::Parser json_parser;
+		Poco::Dynamic::Var json_var = json_parser.parse(json_str);
+		Poco::JSON::Object::Ptr json_obj_ptr = json_var.extract<Poco::JSON::Object::Ptr>();
+		iv_cipher			= json_obj_ptr->get("parameter1").toString();
+		key_cipher			= json_obj_ptr->get("parameter2").toString();
+		mode_cipher			= json_obj_ptr->get("parameter3").toString();
+		original_pin_cipher = json_obj_ptr->get("parameter4").toString();
+	}
+	catch (Poco::JSON::JSONException &e)
+	{
+		errCode = -3;
+		errstr = e.displayText();
+		return errCode;
+	}
+	
 
-	return errCode;
+	// 3. 解密随机向量
+	std::string iv_plain;
+	errCode = this->RsaDecryptWithPKCS12Cert_v1(iv_cipher, iv_plain, pkcs12cert_path, pkcs12cert_pin);
+	if (errCode != 0)
+	{
+		return -4;
+	}
+
+	// 4. 解密随机密钥
+	std::string key_plain;
+	errCode = this->RsaDecryptWithPKCS12Cert_v1(key_cipher, key_plain, pkcs12cert_path, pkcs12cert_pin);
+	if (errCode != 0)
+	{
+		return -5;
+	}
+
+	// 5. 解密加密模式
+	std::string mode_plain;
+	errCode = this->RsaDecryptWithPKCS12Cert_v1(mode_cipher, mode_plain, pkcs12cert_path, pkcs12cert_pin);
+	if (errCode != 0)
+	{
+		return -6;
+	}
+
+	// 6. 解密口令
+	errCode = this->Decrypt_v1(original_pin_cipher, pin, (const unsigned char *)key_plain.data(), key_plain.size(), mode_plain, (const unsigned char *)iv_plain.data(), iv_plain.size());
+	if (errCode != 0)
+	{
+		return -7;
+	}
+
+	return 0;
 }
 
 int libGxxGmCryptoEx::Encrypt_v1(std::string plain, std::string &cipher, const unsigned char *key, int key_len, std::string mode, const unsigned char *iv, int iv_len)

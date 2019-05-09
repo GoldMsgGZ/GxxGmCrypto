@@ -19,9 +19,23 @@ public:
 
 public:
 	/**
-	 * 通用pin码加密接口，此版本暂未支持
+	 * 使用PKCS12证书加密口令
+	 * 参数：
+	 *	@pin				[] 明文口令
+	 *	@pin_cipher			[] 密文口令
+	 *	@pkcs12cert_path	[] PKCS12证书路径
+	 *	@pkcs12cert_pin		[] PKCS12证书口令
 	 */
 	int EncryptPin_v1(std::string pin, std::string &pin_cipher, std::string pkcs12cert_path, std::string pkcs12cert_pin);
+
+	/**
+	 * 使用PKCS12证书解密口令
+	 * 参数：
+	 *	@pin_cipher			[] 密文口令
+	 *	@pin				[] 明文口令
+	 *	@pkcs12cert_path	[] PKCS12证书路径
+	 *	@pkcs12cert_pin		[] PKCS12证书口令
+	 */
 	int DecryptPin_v1(std::string pin_cipher, std::string &pin, std::string pkcs12cert_path, std::string pkcs12cert_pin);
 
 public:
