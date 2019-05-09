@@ -125,10 +125,10 @@ int libGxxGmCryptoEx::EncryptPin_v1(std::string pin, std::string &pin_cipher, st
 	std::string json_str;
 	try {
 		Poco::JSON::Object json_obj;
-		json_obj.set("parameter1", iv_cipher);
-		json_obj.set("parameter2", key_cipher);
-		json_obj.set("parameter3", mode_cipher);
-		json_obj.set("parameter4", original_pin_cipher);
+		json_obj.set("parameter1", iv_cipher);				// 加密的随机向量
+		json_obj.set("parameter2", key_cipher);				// 加密的随机密钥
+		json_obj.set("parameter3", mode_cipher);			// 加密的加密模式
+		json_obj.set("parameter4", original_pin_cipher);	// 加密的口令
 
 		std::stringstream json_stream;
 		json_obj.stringify(json_stream, 0);
@@ -247,8 +247,8 @@ int libGxxGmCryptoEx::Encrypt_v1(std::string plain, std::string &cipher, const u
 	try
 	{
 		// 先准备好密钥和向量
-		Poco::Crypto::CipherKey::ByteVec key_vector(16);
-		Poco::Crypto::CipherKey::ByteVec iv_vector(16);
+		Poco::Crypto::CipherKey::ByteVec key_vector;
+		Poco::Crypto::CipherKey::ByteVec iv_vector;
 
 		for (int index = 0; index < key_len; ++index)
 			key_vector.push_back(key[index]);
@@ -256,13 +256,14 @@ int libGxxGmCryptoEx::Encrypt_v1(std::string plain, std::string &cipher, const u
 		for (int index = 0; index < iv_len; ++index)
 			iv_vector.push_back(iv[index]);
 
+		Poco::Crypto::CipherKey cipher_key(mode);
+		cipher_key.setKey(key_vector);
+		cipher_key.setIV(iv_vector);
 
-		Poco::Crypto::Cipher::Ptr ptr_cipher = Poco::Crypto::CipherFactory::defaultFactory().createCipher(Poco::Crypto::CipherKey(mode, key_vector, iv_vector));
+		Poco::Crypto::Cipher::Ptr ptr_cipher = Poco::Crypto::CipherFactory::defaultFactory().createCipher(cipher_key);
 
 		// 加密数据
 		cipher = ptr_cipher->encryptString(plain, Poco::Crypto::Cipher::ENC_BASE64);
-		//std::string cipher_tmp = ptr_cipher->encryptString(plain, Poco::Crypto::Cipher::ENC_BASE64);
-		//cipher = cipher_tmp;
 	}
 	catch(Poco::Exception &e)
 	{
@@ -282,8 +283,8 @@ int libGxxGmCryptoEx::Decrypt_v1(std::string cipher, std::string &plain, const u
 	try
 	{
 		// 先准备好密钥和向量
-		Poco::Crypto::CipherKey::ByteVec key_vector(16);
-		Poco::Crypto::CipherKey::ByteVec iv_vector(16);
+		Poco::Crypto::CipherKey::ByteVec key_vector;
+		Poco::Crypto::CipherKey::ByteVec iv_vector;
 
 		for (int index = 0; index < key_len; ++index)
 			key_vector.push_back(key[index]);
@@ -291,6 +292,9 @@ int libGxxGmCryptoEx::Decrypt_v1(std::string cipher, std::string &plain, const u
 		for (int index = 0; index < iv_len; ++index)
 			iv_vector.push_back(iv[index]);
 
+		Poco::Crypto::CipherKey cipher_key(mode);
+		cipher_key.setKey(key_vector);
+		cipher_key.setIV(iv_vector);
 
 		Poco::Crypto::Cipher::Ptr ptr_cipher = Poco::Crypto::CipherFactory::defaultFactory().createCipher(Poco::Crypto::CipherKey(mode, key_vector, iv_vector));
 
